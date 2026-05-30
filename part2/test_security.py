@@ -8,8 +8,8 @@ import pytest
 import sys
 import os
 
-# Add session1 to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../session1"))
+# Add part1 to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../part1"))
 
 from app_secure import app, init_db
 
@@ -22,6 +22,16 @@ def client():
         with app.app_context():
             init_db()
         yield c
+
+def login(client):
+    return client.post(
+        "/login",
+        data={
+            "username": "admin",
+            "password": "Admin@Secure!2024"
+        },
+        follow_redirects=True
+    )
 
 
 # ─── Authentication Tests ─────────────────────────────────────────────────────
@@ -199,5 +209,20 @@ class TestSecurityHeaders:
         assert "Werkzeug" not in server or True  # Informational - document if leaking
 
 
+
+def test_form_requires_csrf_token(client):
+
+    login(client)
+
+    rv = client.post(
+        "/profile",
+        data={
+            "bio": "test"
+        }
+    )
+
+    assert rv.status_code in [400, 403]
+
+    
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

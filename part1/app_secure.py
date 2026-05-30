@@ -14,9 +14,11 @@ import re
 import logging
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf.csrf import CSRFProtect
 
 # ─── App Configuration ────────────────────────────────────────────────────────
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 # FIX 1: Secret key loaded from environment variable, never hardcoded
 app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
@@ -189,6 +191,19 @@ def api_users():
     users = conn.execute("SELECT id, username, role FROM users").fetchall()
     conn.close()
     return jsonify([dict(u) for u in users])
+
+
+# FIX 9: CSRF protection via flask-wtf - CSRF token required for POST requests
+@app.route("/profile", methods=["POST"])
+@login_required
+def profile():
+
+    bio = request.form.get("bio", "")
+
+    return jsonify({
+        "message": "Profile updated",
+        "bio": bio
+    })
 
 
 if __name__ == "__main__":
