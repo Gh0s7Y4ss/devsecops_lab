@@ -74,7 +74,7 @@ jobs:
       - name: Check dependencies for CVEs
         run: |
           safety check \
-            -r code/session1/requirements.txt \
+            -r requirements.txt \
             --json \
             --output safety_report.json || true
           
